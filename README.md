@@ -6,7 +6,7 @@
 
 ## Past searches are stored in local storage as well as in the form of a list on the web page.  If the user wants to view the current weather and the 5-day forecast for a city they have previously searched on, they do not need to type in the name of the city again.  The user can click on the name of the city in the search history list.
 
-## <img src="" alt = "Finished Website" />
+## <img src="./assets/Screenshot 2023-08-06 at 5.03.57 PM.png" alt = "Finished Website" />
 
 ## https://beffylaureen.github.io/wx-dashboard/
 ## https://github.com/beffylaureen/wx-dashboard
