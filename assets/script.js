@@ -1,17 +1,20 @@
 //variables
-
+var searchHistory = [];
 var weatherApi = 'https://api.openweathermap.org';
 var weatherApiKey = 'f9bd0742ea693f65ddf31053b50bc31a';
-var searchHistory = [];
+
 
 var citySearch = document.querySelector('#city-search');
 var cityInput = document.querySelector('#city-input');
-var todayWeather = document.querySelector('#today');
-var forecastWeather = document.querySelector('#forecast');
-var previousSearch = document.querySelector('#history');
+var todayWeatherContainer = document.querySelector('#today');
+var forecastWeatherContainer = document.querySelector('#forecast');
+var previousSearchContainer = document.querySelector('#history');
+
+dayjs.extend(window.dayjs_plugin_utc);
+dayjs.extend(window.dayjs_plugin_timezone);
 
 function renderPreviousSearch(){
-  searchHistoryContainer.innerHTML='';
+  previousSearchContainer.innerHTML='';
   for (var i = previousSearch.length -1; i>=0; i--){
     var btn = document.createElement('button');
     btn.setAttribute('type', 'button');
@@ -19,12 +22,12 @@ function renderPreviousSearch(){
     btn.classList.add('history-btn', 'btn-history');
     btn.setAttribute('data-search', previousSearch[i]);
     btn.textContent=previousSearch[i];
-    searchHistoryContainer.append(btn);
+    previousSearchContainer.append(btn);
   }
 }
 
 function appendPreviousSearch(search){
-  if (previousSearch.indexOf(search)!==-1){
+  if (previousSearch.indexOf(search)!== -1){
     return;
   }
   previousSearch.push(search);
@@ -32,7 +35,15 @@ function appendPreviousSearch(search){
   localStorage.setItem('search-history', JSON.stringify(previousSearch));
   renderPreviousSearch();
 }
-function renderTodayWeather(city, weather){
+
+function initPreviousSearch(){
+  var storedSearch = localStorage.getItem('search-history');
+  if (storedSearch){
+    previousSearch = JSON.parse(storedSearch);
+  }
+  renderPreviousSearch();
+}
+function renderTodayWeatherContainer(city, weather){
   var date = dayjs().format ('MM/DD/YYYY');
   var temp = weather.today.temp;
   var wind = weather.today.wind;
@@ -69,7 +80,7 @@ function renderTodayWeather(city, weather){
   todayContainer.innerHTML='';
   todayContainer.append(card);
 
-function renderForecast(forecast){
+function renderForecastWeatherContainer(forecast){
   var iconUrl = `https://openweathermap.org/img/w/${forecast.weather[0].icon}.png`;
   var iconDesc = forecast.weather[0].description;
   var temp = weather.forecast.temp;
@@ -79,7 +90,7 @@ function renderForecast(forecast){
   var card = document.createElement('div');
   var cardContent = document.createElement('div');
   var cardTitle = document.createElement('h4');
-  var weatherIcon = document.createElement('img');
+  var wxIcon = document.createElement('img');
   var tempEl = document.createElement('p');
   var windEl = document.createElement('p');
   var humidEl = document.createElement('p');
@@ -101,7 +112,7 @@ function renderForecast(forecast){
   wxIcon.setAttribute('src', iconUrl);
   wxIcon.setAttribute('alt', iconDesc);
   tempEl.textContent = `Temp: ${tempF} degrees`;
-  windEl.textContent = `Wind: ${windMph} MPH`;
+  windEl.textContent = `Wind: ${windMph} miles per hour`;
   humidEl.textContent = `Humidity: ${humidity} %`;
 
   forecastContainer.append(comp);
@@ -161,5 +172,25 @@ function fetchCoords(search) {
       }
     })
 }
+function handleSearchSubmit(e){
+  if (!cityInput.value){
+    return;
+  }
+  e.preventDefault();
+  var search = cityInput.value();
+  fetchCoords(search);
+  cityInput.value = '';
+}
 
+function handlePreviousSearchClick(e){
+  if (!e.target.matches('btn-history')){
+    return;
+  }
+  var btn = e.target;
+  var search = btn.getAttribute('data-search');
+  fetchCoords(search);
+}
+initPreviousSearch();
+citySearch.addEventListener('submit', handleSearchSubmit);
+searchHistoryContainer.addEventListener('click', handlePreviousSearchClick);
 }
