@@ -208,7 +208,6 @@ function fetchCoords(search) {
 }
 
 function handleSearchFormSubmit(e) {
-  // Don't continue if there is nothing in the search form
   if (!searchInput.value) {
     return;
   }
@@ -220,7 +219,6 @@ function handleSearchFormSubmit(e) {
 }
 
 function handleSearchHistoryClick(e) {
-  // Don't do search if current elements is not a search history button
   if (!e.target.matches('.btn-history')) {
     return;
   }
