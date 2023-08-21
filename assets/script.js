@@ -3,64 +3,69 @@ var searchHistory = [];
 var weatherApi = 'https://api.openweathermap.org';
 var weatherApiKey = 'f9bd0742ea693f65ddf31053b50bc31a';
 
+//DOM referebces
+var searchForm = document.querySelector('#search-form');
+var searchInput = document.querySelector('#search-input');
+var todayContainer = document.querySelector('#today');
+var forecastContainer = document.querySelector('#forecast');
+var searchHistoryContainer = document.querySelector('#history');
 
-var citySearch = document.querySelector('#city-search');
-var cityInput = document.querySelector('#city-input');
-var todayWeatherContainer = document.querySelector('#today');
-var forecastWeatherContainer = document.querySelector('#forecast');
-var previousSearchContainer = document.querySelector('#history');
-
+//Day.js
 dayjs.extend(window.dayjs_plugin_utc);
 dayjs.extend(window.dayjs_plugin_timezone);
 
-function renderPreviousSearch(){
-  previousSearchContainer.innerHTML='';
-  for (var i = previousSearch.length -1; i>=0; i--){
+//Display search history
+function renderSearchHistory(){
+  searchHistoryContainer.innerHTML='';
+  for (var i = searchHistory.length -1; i>=0; i--){
     var btn = document.createElement('button');
     btn.setAttribute('type', 'button');
-    btn.setAttribute('data', 'forecast');
-    btn.classList.add('history-btn', 'btn-history');
-    btn.setAttribute('data-search', previousSearch[i]);
-    btn.textContent=previousSearch[i];
-    previousSearchContainer.append(btn);
+    btn.setAttribute('aria-controls','today forecast');
+    btn.classList.add('history-btn','btn-history');
+    btn.setAttribute('data-search', searchHistory[i]);
+    btn.textContent=searchHistory[i];
+    searchHistoryContainer.append(btn);
   }
 }
 
-function appendPreviousSearch(search){
-  if (previousSearch.indexOf(search)!== -1){
+//Update search history
+function appendToHistory(search){
+  if (searchHistory.indexOf(search)!== -1){
     return;
   }
-  previousSearch.push(search);
+  searchHistory.push(search);
 
-  localStorage.setItem('search-history', JSON.stringify(previousSearch));
-  renderPreviousSearch();
+  localStorage.setItem('search-history', JSON.stringify(searchHistory));
+  renderSearchHistory();
 }
 
-function initPreviousSearch(){
-  var storedSearch = localStorage.getItem('search-history');
-  if (storedSearch){
-    previousSearch = JSON.parse(storedSearch);
+function initSearchHistory(){
+  var storedHistory = localStorage.getItem('search-history');
+  if (storedHistory){
+    searchHistory = JSON.parse(storedHistory);
   }
-  renderPreviousSearch();
+  renderSearchHistory();
 }
-function renderTodayWeatherContainer(city, weather){
+
+//Display today's weather
+function renderCurrentWeather(city, weather){
   var date = dayjs().format ('MM/DD/YYYY');
-  var temp = weather.today.temp;
-  var wind = weather.today.wind;
-  var humid = weather.today.humid;
+  var temp = weather.main.temp;
+  var wind = weather.wind.speed;
+  var humid = weather.main.humidity;
   var iconUrl = `https://openweathermap.org/img/w/${weather.weather[0].icon}.png`;
   var iconDesc = weather.weather[0].description || weather[0].today;
   var card = document.createElement('div');
-  var cardContent = document.createElement('div');
-  var heading = document.createElement('h3');
+  var cardBody = document.createElement('div');
+  var heading = document.createElement('h2');
   var wxIcon = document.createElement('img');
   var tempEl = document.createElement('p');
   var windEl = document.createElement('p');
   var humidEl = document.createElement('p');
 
   card.setAttribute('class', 'card');
-  cardContent.setAttribute('class', 'card-content');
-  card.append(cardContent);
+  cardBody.setAttribute('class', 'card-body');
+  card.append(cardBody);
 
   heading.setAttribute('class','h3 card-title');
   tempEl.setAttribute('class', 'card-text');
