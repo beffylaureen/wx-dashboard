@@ -1,6 +1,6 @@
 //variables
 var searchHistory = [];
-var weatherApi = 'https://api.openweathermap.org';
+var weatherApiRootUrl = 'https://api.openweathermap.org';
 var weatherApiKey = 'f9bd0742ea693f65ddf31053b50bc31a';
 
 //DOM referebces
@@ -80,34 +80,36 @@ function renderCurrentWeather(city, weather){
   tempEl.textContent = `Temp: ${temp} degrees`;
   windEl.textContent = `Wind: ${wind} miles per hour`;
   humidEl.textContent = `Humidity: ${humid} %`;
-  cardContent.append(heading, tempEl, windEl, humidEl);
+  cardBody.append(heading, tempEl, windEl, humidEl);
 
   todayContainer.innerHTML='';
   todayContainer.append(card);
-
-function renderForecastWeatherContainer(forecast){
+}
+//Dispay forecast card
+function renderForecastCard(forecast){
   var iconUrl = `https://openweathermap.org/img/w/${forecast.weather[0].icon}.png`;
   var iconDesc = forecast.weather[0].description;
-  var temp = weather.forecast.temp;
-  var wind = weather.forecast.wind;
-  var humid = weather.forecast.humid;
-  var comp = document.createElement('div');
+  var temp = forecast.main.temp;
+  var wind = forecast.wind.speed;
+  var humid = forecast.main.humid;
+  //create card
+  var col = document.createElement('div');
   var card = document.createElement('div');
-  var cardContent = document.createElement('div');
-  var cardTitle = document.createElement('h4');
+  var cardBody = document.createElement('div');
+  var cardTitle = document.createElement('h5');
   var wxIcon = document.createElement('img');
   var tempEl = document.createElement('p');
   var windEl = document.createElement('p');
   var humidEl = document.createElement('p');
 
-  comp.append(card);
-  card.append(cardContent);
-  cardContent.append(cardTitle, wxIcon, tempEl, windEl, humidEl);
+  col.append(card);
+  card.append(cardBody);
+  cardBody.append(cardTitle, wxIcon, tempEl, windEl, humidEl);
 
-  comp.setAttribute('class', 'comp-md');
-  comp.classList.add('forecast-card');
+  col.setAttribute('class', 'col-md');
+  col.classList.add('five-day-card');
   card.setAttribute('class', 'card bg-light h-100 text-black');
-  cardContent.setAttribute('class', 'card-body p-3');
+  cardBody.setAttribute('class', 'card-body p-2');
   cardTitle.setAttribute('class', 'card-title');
   tempEl.setAttribute('class', 'card-text');
   windEl.setAttribute('class', 'card-text');
@@ -116,42 +118,44 @@ function renderForecastWeatherContainer(forecast){
   cardTitle.textContent = dayjs(forecast.dt_txt).format('MM/DD/YYYY');
   wxIcon.setAttribute('src', iconUrl);
   wxIcon.setAttribute('alt', iconDesc);
-  tempEl.textContent = `Temp: ${tempF} degrees`;
+  tempEl.textContent = `Temp: ${temp} degrees`;
   windEl.textContent = `Wind: ${windMph} miles per hour`;
   humidEl.textContent = `Humidity: ${humidity} %`;
 
-  forecastContainer.append(comp);
+  forecastContainer.append(col);
 
-  function renderForecast(futureForecast){
+  //Display forecast
+  function renderForecast(dailyForecast){
     var startDt = dayjs().add(1, 'day').startOf('day').unix();
     var endDt = dayjs().add(6, 'day').startOf('day').unix();
-    var headingComp = document.createElement('div');
-    var heading = document.createElement('h5');
+    var headingCol = document.createElement('div');
+    var heading = document.createElement('h4');
 
-    headingComp.setAttribute('class', 'col-12');
-    heading.textContent = 'Five-day Forecast:';
-    heading.headingComp.append(heading);
+    headingCol.setAttribute('class', 'col-12');
+    heading.textContent = '5-day Forecast:';
+    headingCol.append(heading);
 
     forecastContainer.innerHTML = '';
-    forecastContainer.append(headingComp);
+    forecastContainer.append(headingCol);
 
-    for (var i = 0; i < futureForecast.length; i++){
-      if (futureForecast[i].dt >= startDt && futureForecast[i].dt < endDt){
-        if (futureForecast[i].dt_txt.slice(11, 13)=="12") {
-          renderForecast(futureForecast[i]);
+    for (var i = 0; i < dailyForecast.length; i++){
+      if (dailyForecast[i].dt >= startDt && dailyForecast[i].dt < endDt){
+        if (dailyForecast[i].dt_txt.slice(11, 13)=="12") {
+          renderForecastCard(dailyForecast[i]);
         }
       }
     }
   }
   function renderItems(city, data){
-    renderTodayWeather(city, data.list[0], data.city);
-    renderFuture(data.list);
+    renderCurrentWeather(city, data.list[0], data.city.timezone);
+    renderForecast(data.list);
   }
-  function fetchWeather(location){
+  //Fetches weather by geolocation
+  function fetchWeather(location) {
     var { lat } = location;
     var { lon } = location;
-    var city = location.city
-    var apiUrl = `${weatherApi}/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${weatherApiKey}`;
+    var city = location.name;
+    var apiUrl = `${weatherApiRootUrl}/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${weatherApiKey}`;
   }
     fetch(apiUrl)
       .then(function (res) {
@@ -162,7 +166,7 @@ function renderForecastWeatherContainer(forecast){
       })
 }
 function fetchCoords(search) {
-  var apiUrl = `${weatherApi}/geo/1.0/direct?q=${search}&limit=5&appid=${weatherApiKey}`;
+  var apiUrl = `${weatherApiRootUrl}/geo/1.0/direct?q=${search}&limit=5&appid=${weatherApiKey}`;
 
   fetch(apiUrl)
     .then(function (res) {
@@ -176,18 +180,21 @@ function fetchCoords(search) {
         fetchWeather(data[0]);
       }
     })
+    .catch(function (err){
+      console.error(err);
+    });
 }
-function handleSearchSubmit(e){
-  if (!cityInput.value){
+function handleSearchFormSubmit(e){
+  if (!searchInput.value){
     return;
   }
   e.preventDefault();
-  var search = cityInput.value();
+  var search = searchInput.value.trim();
   fetchCoords(search);
-  cityInput.value = '';
+  searchInput.value = '';
 }
 
-function handlePreviousSearchClick(e){
+function handleSearchHistoryClick(e){
   if (!e.target.matches('btn-history')){
     return;
   }
@@ -195,7 +202,6 @@ function handlePreviousSearchClick(e){
   var search = btn.getAttribute('data-search');
   fetchCoords(search);
 }
-initPreviousSearch();
-citySearch.addEventListener('submit', handleSearchSubmit);
-searchHistoryContainer.addEventListener('click', handlePreviousSearchClick);
-}
+initSearchHistory();
+searchForm.addEventListener('submit', handleSearchFormSubmit);
+searchHistoryContainer.addEventListener('click', handleSearchHistoryClick);
